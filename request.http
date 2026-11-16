@@ -1,0 +1,105 @@
+### 1. Health Check
+GET http://localhost:8080/api/health
+
+### 2. Register New User
+# @name register
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Radhika Sharma",
+  "email": "radhika@seventhraylegaltech.com",
+  "password": "Password123!",
+  "companyName": "Seventh Ray LegalTech Solutions"
+}
+
+### 3. Login User
+# @name login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "radhika@seventhraylegaltech.com",
+  "password": "Password123!"
+}
+
+
+### 1. Upload Contract (Multipart with sample text contract)
+@authToken = {{login.response.body.token}}
+POST http://localhost:8080/api/contracts/upload
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="title"
+
+Master Engineering & EPC Contract
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="clientName"
+
+Apex Infrastructure Ltd.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="contractType"
+
+EPC
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="value"
+
+750000.00
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="startDate"
+
+2026-11-16
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="endDate"
+
+2028-11-16
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="contract.txt"
+Content-Type: text/plain
+
+1. PARTIES: Seventh Ray LegalTech Solutions and Apex Infrastructure Ltd.
+2. PAYMENT TERMS: Payments shall be made within thirty (30) days of invoice date.
+3. TERMINATION: Either party may terminate with sixty (60) days prior written notice.
+4. CONFIDENTIALITY: Proprietary materials shall be protected for five (5) years.
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 2. List All Contracts
+GET http://localhost:8080/api/contracts
+Authorization: Bearer {{authToken}}
+
+### 3. Get Contract Details by ID (View Full Parsed Text)
+GET http://localhost:8080/api/contracts/1
+Authorization: Bearer {{authToken}}
+
+### 4. Test State Machine: VALID Step 1 (DRAFT -> UNDER_REVIEW)
+PATCH http://localhost:8080/api/contracts/1/status
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "status": "UNDER_REVIEW"
+}
+
+### 5. Test State Machine: VALID Step 2 (UNDER_REVIEW -> APPROVED)
+PATCH http://localhost:8080/api/contracts/1/status
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "status": "APPROVED"
+}
+
+### 6. Test State Machine: FORBIDDEN Transition (Test Error Handling -> triggers 400 Bad Request)
+# Contract is now APPROVED. It is FORBIDDEN to jump directly backwards to DRAFT!
+PATCH http://localhost:8080/api/contracts/1/status
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "status": "DRAFT"
+}
+
+### 7. Download File
+GET http://localhost:8080/api/contracts/1/download
+Authorization: Bearer {{authToken}}
