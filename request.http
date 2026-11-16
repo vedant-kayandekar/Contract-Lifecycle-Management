@@ -90,7 +90,7 @@ Content-Type: application/json
   "status": "APPROVED"
 }
 
-### 6. Test State Machine: FORBIDDEN Transition (Test Error Handling -> triggers 400 Bad Request)
+### 6. Test State Machine: FORBIDDEN Transition (Triggers 400 Bad Request)
 # Contract is now APPROVED. It is FORBIDDEN to jump directly backwards to DRAFT!
 PATCH http://localhost:8080/api/contracts/1/status
 Authorization: Bearer {{authToken}}
@@ -102,4 +102,38 @@ Content-Type: application/json
 
 ### 7. Download File
 GET http://localhost:8080/api/contracts/1/download
+Authorization: Bearer {{authToken}}
+
+### =================================================================
+### MODULE 6: Q&A ENGINE, CLAUSE CITATION & CONVERSATIONAL MEMORY
+### =================================================================
+
+### 8. Ask Question on Specific Contract (Clause Citations + Scoring)
+POST http://localhost:8080/api/contracts/1/ask
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "question": "What are the payment terms and invoice requirements?"
+}
+
+### 9. Keyword Search Inside Contract (Finds matching paragraph chunks)
+POST http://localhost:8080/api/contracts/1/search?keyword=termination
+Authorization: Bearer {{authToken}}
+
+### 10. View Contract Chat History (10-Message Rolling Memory)
+GET http://localhost:8080/api/contracts/1/chat-history
+Authorization: Bearer {{authToken}}
+
+### 11. Ask Global Question Across ALL Portfolio Contracts
+POST http://localhost:8080/api/contracts/global/ask
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "question": "What confidentiality and proprietary terms apply across all our agreements?"
+}
+
+### 12. View Global Portfolio Chat History
+GET http://localhost:8080/api/contracts/global/chat-history
 Authorization: Bearer {{authToken}}
