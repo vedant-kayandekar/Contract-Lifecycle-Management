@@ -101,6 +101,25 @@
     <version>0.12.6</version>
     <scope>runtime</scope>
 </dependency>
+    <!-- PDF processing -->
+<dependency>
+    <groupId>org.apache.pdfbox</groupId>
+    <artifactId>pdfbox</artifactId>
+    <version>3.0.5</version>
+</dependency>
+
+<!-- Excel processing (Apache POI) -->
+<dependency>
+    <groupId>org.apache.poi</groupId>
+    <artifactId>poi</artifactId>
+    <version>5.4.1</version>
+</dependency>
+
+<dependency>
+    <groupId>org.apache.poi</groupId>
+    <artifactId>poi-ooxml</artifactId>
+    <version>5.4.1</version>
+</dependency>
 
 		
 	</dependencies>
