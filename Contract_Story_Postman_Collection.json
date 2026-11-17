@@ -1,0 +1,250 @@
+{
+  "info": {
+    "name": "Contract Story - Full Backend API Collection",
+    "description": "Complete production API test suite for Contract Story (Seventh Ray LegalTech). Includes Auth, Contract CRUD, Lifecycle State Machine, File Download, and AI Q&A Engine.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/health"
+          }
+        },
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Radhika Sharma\",\n  \"email\": \"radhika@seventhraylegaltech.com\",\n  \"password\": \"Password123!\",\n  \"companyName\": \"Seventh Ray LegalTech Solutions\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login User (Auto-saves authToken)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set(\"authToken\", jsonData.token);",
+                  "    console.log(\"Saved authToken: \" + jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"radhika@seventhraylegaltech.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Contracts & Lifecycle",
+      "item": [
+        {
+          "name": "Upload Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Master Engineering & EPC Contract", "type": "text" },
+                { "key": "clientName", "value": "Apex Infrastructure Ltd.", "type": "text" },
+                { "key": "contractType", "value": "EPC", "type": "text" },
+                { "key": "value", "value": "750000.00", "type": "text" },
+                { "key": "startDate", "value": "2026-11-16", "type": "text" },
+                { "key": "endDate", "value": "2028-11-16", "type": "text" },
+                { "key": "file", "type": "file", "description": "Select a PDF or DOCX file" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/contracts/upload"
+          }
+        },
+        {
+          "name": "List All Contracts",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/contracts"
+          }
+        },
+        {
+          "name": "Get Contract Details (by ID)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/contracts/1"
+          }
+        },
+        {
+          "name": "State Machine: VALID Step 1 (DRAFT -> UNDER_REVIEW)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"UNDER_REVIEW\"\n}"
+            },
+            "url": "{{baseUrl}}/api/contracts/1/status"
+          }
+        },
+        {
+          "name": "State Machine: VALID Step 2 (UNDER_REVIEW -> APPROVED)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\"\n}"
+            },
+            "url": "{{baseUrl}}/api/contracts/1/status"
+          }
+        },
+        {
+          "name": "State Machine: FORBIDDEN Jump (APPROVED -> DRAFT triggers 400 Bad Request)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DRAFT\"\n}"
+            },
+            "url": "{{baseUrl}}/api/contracts/1/status"
+          }
+        },
+        {
+          "name": "Download Original Contract Document",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/contracts/1/download"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. AI Q&A Engine & Chat History",
+      "item": [
+        {
+          "name": "Ask Question on Contract (AI Legal Analysis + Citations)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What are the payment terms and invoice requirements?\"\n}"
+            },
+            "url": "{{baseUrl}}/api/contracts/1/ask"
+          }
+        },
+        {
+          "name": "Keyword Chunk Search Inside Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts/1/search?keyword=termination",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts", "1", "search"],
+              "query": [
+                { "key": "keyword", "value": "termination" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Contract Chat History (Rolling 10-message memory)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/contracts/1/chat-history"
+          }
+        },
+        {
+          "name": "Ask Global Portfolio Question Across All Contracts",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What confidentiality and proprietary terms apply across all our agreements?\"\n}"
+            },
+            "url": "{{baseUrl}}/api/contracts/global/ask"
+          }
+        },
+        {
+          "name": "Get Global Portfolio Chat History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/contracts/global/chat-history"
+          }
+        }
+      ]
+    }
+  ]
+}
