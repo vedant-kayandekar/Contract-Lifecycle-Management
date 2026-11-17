@@ -36,7 +36,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Radhika Sharma\",\n  \"email\": \"radhika@seventhraylegaltech.com\",\n  \"password\": \"Password123!\",\n  \"companyName\": \"Seventh Ray LegalTech Solutions\"\n}"
+              "raw": "{\n  \"name\": \"Vedant Kayandekar\",\n  \"email\": \"vedantassociates2004@gmail.com\",\n  \"password\": \"Password123!\",\n  \"companyName\": \"Seventh Ray LegalTech Solutions\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/register"
           }
@@ -65,7 +65,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"radhika@seventhraylegaltech.com\",\n  \"password\": \"Password123!\"\n}"
+              "raw": "{\n  \"email\": \"vedantassociates2004@gmail.com\",\n  \"password\": \"Password123!\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/login"
           }
