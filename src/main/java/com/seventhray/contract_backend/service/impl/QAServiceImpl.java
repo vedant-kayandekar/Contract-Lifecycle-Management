@@ -11,6 +11,7 @@ import com.seventhray.contract_backend.model.User;
 import com.seventhray.contract_backend.repository.ContractChatRepository;
 import com.seventhray.contract_backend.repository.ContractRepository;
 import com.seventhray.contract_backend.service.QAService;
+import com.seventhray.contract_backend.service.llm.LlmService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ public class QAServiceImpl implements QAService {
 
     private final ContractRepository contractRepository;
     private final ContractChatRepository chatRepository;
+    private final LlmService llmService;
 
     // Filter out common English filler words to isolate meaningful legal concepts
     private static final Set<String> STOP_WORDS = Set.of(
@@ -39,9 +41,14 @@ public class QAServiceImpl implements QAService {
             "on", "off", "over", "under", "again", "further", "contract", "agreement", "clause"
     );
 
-    public QAServiceImpl(ContractRepository contractRepository, ContractChatRepository chatRepository) {
+    public QAServiceImpl(
+            ContractRepository contractRepository,
+            ContractChatRepository chatRepository,
+            LlmService llmService
+    ) {
         this.contractRepository = contractRepository;
         this.chatRepository = chatRepository;
+        this.llmService = llmService;
     }
 
     @Override
@@ -69,21 +76,39 @@ public class QAServiceImpl implements QAService {
                 .map(sp -> sp.paragraph)
                 .collect(Collectors.toList());
 
-        // 4. Generate structured answer
-        String answer;
-        if (matchingClauses.isEmpty()) {
-            answer = "I searched through the text of \"" + contract.getTitle() + 
-                     "\", but could not find explicit clauses discussing: \"" + question.trim() + 
-                     "\". Please verify the term or check if this document contains an appendix/addendum.";
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Based on the contract \"").append(contract.getTitle()).append("\", here are the relevant terms found:\n\n");
-            for (int i = 0; i < matchingClauses.size(); i++) {
-                sb.append("• [Clause Reference ").append(i + 1).append("]:\n\"")
-                  .append(matchingClauses.get(i)).append("\"\n\n");
+        // 4. Generate structured answer via LLM (FreeLLMAPI) with graceful heuristic fallback
+        String answer = null;
+        boolean aiGenerated = false;
+
+        if (llmService.isEnabled()) {
+            answer = llmService.generateContractAnswer(
+                    contract.getTitle(),
+                    contract.getClientName(),
+                    matchingClauses,
+                    last10Chats,
+                    question
+            );
+            if (answer != null && !answer.trim().isEmpty()) {
+                aiGenerated = true;
             }
-            sb.append("Summary: The contract addresses this matter in the sections highlighted above.");
-            answer = sb.toString();
+        }
+
+        // Heuristic fallback if LLM is disabled or fails
+        if (answer == null) {
+            if (matchingClauses.isEmpty()) {
+                answer = "I searched through the text of \"" + contract.getTitle() + 
+                         "\", but could not find explicit clauses discussing: \"" + question.trim() + 
+                         "\". Please verify the term or check if this document contains an appendix/addendum.";
+            } else {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Based on the contract \"").append(contract.getTitle()).append("\", here are the relevant terms found:\n\n");
+                for (int i = 0; i < matchingClauses.size(); i++) {
+                    sb.append("• [Clause Reference ").append(i + 1).append("]:\n\"")
+                      .append(matchingClauses.get(i)).append("\"\n\n");
+                }
+                sb.append("Summary: The contract addresses this matter in the sections highlighted above.");
+                answer = sb.toString();
+            }
         }
 
         // 5. Save to chat history (both user question and assistant answer)
@@ -94,7 +119,7 @@ public class QAServiceImpl implements QAService {
                 .question(question.trim())
                 .answer(answer)
                 .matchingClauses(matchingClauses)
-                .aiGenerated(false) // Heuristic/keyword extraction engine active (AI fallback slot)
+                .aiGenerated(aiGenerated)
                 .contractId(contract.getId())
                 .contractTitle(contract.getTitle())
                 .contextHistorySize(contextSize)
@@ -164,19 +189,35 @@ public class QAServiceImpl implements QAService {
             portfolioFindings.addAll(topMatches);
         }
 
-        // 3. Synthesize answer across portfolio
-        String answer;
-        if (portfolioFindings.isEmpty()) {
-            answer = "I searched across all " + userContracts.size() + 
-                     " contracts in your portfolio, but found no matching provisions for: \"" + question.trim() + "\".";
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Searched across ").append(userContracts.size()).append(" contracts in your portfolio. ");
-            sb.append("Here are the provisions matching your inquiry:\n\n");
-            for (String finding : portfolioFindings.stream().limit(5).toList()) {
-                sb.append("• ").append(finding).append("\n\n");
+        // 3. Synthesize answer across portfolio via LLM (with heuristic fallback)
+        String answer = null;
+        boolean aiGenerated = false;
+
+        if (llmService.isEnabled()) {
+            answer = llmService.generateGlobalAnswer(
+                    portfolioFindings,
+                    last10Global,
+                    question,
+                    userContracts.size()
+            );
+            if (answer != null && !answer.trim().isEmpty()) {
+                aiGenerated = true;
             }
-            answer = sb.toString();
+        }
+
+        if (answer == null) {
+            if (portfolioFindings.isEmpty()) {
+                answer = "I searched across all " + userContracts.size() + 
+                         " contracts in your portfolio, but found no matching provisions for: \"" + question.trim() + "\".";
+            } else {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Searched across ").append(userContracts.size()).append(" contracts in your portfolio. ");
+                sb.append("Here are the provisions matching your inquiry:\n\n");
+                for (String finding : portfolioFindings.stream().limit(5).toList()) {
+                    sb.append("• ").append(finding).append("\n\n");
+                }
+                answer = sb.toString();
+            }
         }
 
         // 4. Save to global chat history (contract is null)
@@ -187,7 +228,7 @@ public class QAServiceImpl implements QAService {
                 .question(question.trim())
                 .answer(answer)
                 .matchingClauses(portfolioFindings)
-                .aiGenerated(false)
+                .aiGenerated(aiGenerated)
                 .contractId(null)
                 .contractTitle("All Portfolio Contracts (" + userContracts.size() + ")")
                 .contextHistorySize(contextSize)
