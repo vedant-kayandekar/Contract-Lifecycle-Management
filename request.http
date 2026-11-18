@@ -39,6 +39,14 @@ Content-Disposition: form-data; name="clientName"
 
 Apex Infrastructure Ltd.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="counterpartySignatory"
+
+Rajesh Sharma, Managing Director
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="riskLevel"
+
+MEDIUM
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="contractType"
 
 EPC

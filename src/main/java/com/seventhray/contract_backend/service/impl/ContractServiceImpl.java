@@ -7,6 +7,7 @@ import com.seventhray.contract_backend.exception.ResourceNotFoundException;
 import com.seventhray.contract_backend.model.Contract;
 import com.seventhray.contract_backend.model.ContractStatus;
 import com.seventhray.contract_backend.model.ContractType;
+import com.seventhray.contract_backend.model.RiskLevel;
 import com.seventhray.contract_backend.model.User;
 import com.seventhray.contract_backend.repository.ContractRepository;
 import com.seventhray.contract_backend.service.ContractService;
@@ -53,6 +54,10 @@ public class ContractServiceImpl implements ContractService {
             MultipartFile file,
             String title,
             String clientName,
+            //  new 
+            String counterpartySignatory,
+            // new 
+            RiskLevel riskLevel,
             ContractType contractType,
             BigDecimal value,
             LocalDate startDate,
@@ -60,7 +65,7 @@ public class ContractServiceImpl implements ContractService {
             User user
     ) {
         if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please select a PDF or Word (.docx) file to upload");
+            throw new BadRequestException("Please select a PDF or Word (.docx) file to upload");
         }
 
         String originalFilename = file.getOriginalFilename();
@@ -93,6 +98,10 @@ public class ContractServiceImpl implements ContractService {
                 .user(user) // Binds contract to the currently logged-in user
                 .title(title.trim())
                 .clientName(clientName.trim())
+                // new 
+                .counterpartySignatory(counterpartySignatory != null && !counterpartySignatory.isBlank() ? counterpartySignatory.trim() : null)
+                // new 
+                .riskLevel(riskLevel != null ? riskLevel : RiskLevel.LOW)
                 .contractType(contractType != null ? contractType : ContractType.OTHER)
                 .status(ContractStatus.DRAFT) // All new contracts start as DRAFT
                 .fileName(originalFilename)

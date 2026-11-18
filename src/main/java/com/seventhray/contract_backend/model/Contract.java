@@ -32,6 +32,16 @@ public class Contract {
     @Column(name= "client_name" ,nullable = false)
     private String clientName;
 
+    // ✅ new added field
+    @Column(name = "counterparty_signatory")
+    private String counterpartySignatory;
+
+    // ✅ new added field
+    @Enumerated(EnumType.STRING)
+    @Column(name = "risk_level", length = 20)
+    @Builder.Default
+    private RiskLevel riskLevel = RiskLevel.LOW;
+
     // Stores the enum as a human-readable string in PostgreSQL (e.g. "EPC", "NDA")
     @Enumerated(EnumType.STRING)
     @Column(name = "contract_type", nullable = false, length = 30)
@@ -90,6 +100,10 @@ public class Contract {
         }
         if (this.contractType == null) {
             this.contractType = ContractType.OTHER;
+        }
+        // ✅ new added field
+        if (this.riskLevel == null) {
+            this.riskLevel = RiskLevel.LOW;
         }
     }
 

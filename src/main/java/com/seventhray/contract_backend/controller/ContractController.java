@@ -4,6 +4,8 @@ import com.seventhray.contract_backend.dto.contract.ContractResponse;
 import com.seventhray.contract_backend.dto.contract.StatusUpdateRequest;
 import com.seventhray.contract_backend.model.ContractStatus;
 import com.seventhray.contract_backend.model.ContractType;
+// ✅ new added field
+import com.seventhray.contract_backend.model.RiskLevel;
 import com.seventhray.contract_backend.model.User;
 import com.seventhray.contract_backend.service.ContractService;
 import jakarta.validation.Valid;
@@ -42,6 +44,10 @@ public class ContractController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title,
             @RequestParam("clientName") String clientName,
+            //  new added param
+            @RequestParam(value = "counterpartySignatory", required = false) String counterpartySignatory,
+            //  new added param
+            @RequestParam(value = "riskLevel", required = false) RiskLevel riskLevel,
             @RequestParam(value = "contractType", required = false) ContractType contractType,
             @RequestParam(value = "value", required = false) BigDecimal value,
             @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -49,7 +55,7 @@ public class ContractController {
             @AuthenticationPrincipal User currentUser
     ) {
         ContractResponse response = contractService.uploadContract(
-                file, title, clientName, contractType, value, startDate, endDate, currentUser
+                file, title, clientName, counterpartySignatory, riskLevel, contractType, value, startDate, endDate, currentUser
         );
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

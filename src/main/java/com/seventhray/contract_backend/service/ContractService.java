@@ -3,6 +3,7 @@ package com.seventhray.contract_backend.service;
 import com.seventhray.contract_backend.dto.contract.ContractResponse;
 import com.seventhray.contract_backend.model.ContractStatus;
 import com.seventhray.contract_backend.model.ContractType;
+import com.seventhray.contract_backend.model.RiskLevel;
 import com.seventhray.contract_backend.model.User;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +18,10 @@ public interface ContractService {
             MultipartFile file,
             String title,
             String clientName,
+            // new 
+            String counterpartySignatory,
+            //  new 
+            RiskLevel riskLevel,
             ContractType contractType,
             BigDecimal value,
             LocalDate startDate,

@@ -3,6 +3,8 @@ package com.seventhray.contract_backend.dto.contract;
 import com.seventhray.contract_backend.model.Contract;
 import com.seventhray.contract_backend.model.ContractStatus;
 import com.seventhray.contract_backend.model.ContractType;
+// ✅ new added field
+import com.seventhray.contract_backend.model.RiskLevel;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +27,10 @@ public class ContractResponse {
     private Long id;
     private String title;
     private String clientName;
+    // ✅ new added field
+    private String counterpartySignatory;
+    // ✅ new added field
+    private RiskLevel riskLevel;
     private ContractType contractType;
     private ContractStatus status;
     private String fileName;
@@ -52,6 +58,10 @@ public class ContractResponse {
                 .id(contract.getId())
                 .title(contract.getTitle())
                 .clientName(contract.getClientName())
+                // ✅ new added field
+                .counterpartySignatory(contract.getCounterpartySignatory())
+                // ✅ new added field
+                .riskLevel(contract.getRiskLevel())
                 .contractType(contract.getContractType())
                 .status(contract.getStatus())
                 .fileName(contract.getFileName())

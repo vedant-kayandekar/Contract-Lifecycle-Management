@@ -2,6 +2,8 @@ package com.seventhray.contract_backend.repository;
 
 import com.seventhray.contract_backend.model.Contract;
 import com.seventhray.contract_backend.model.ContractStatus;
+// new added field
+import com.seventhray.contract_backend.model.RiskLevel;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -35,4 +37,15 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
     // 5. Global Portfolio query: fetches all contracts of this user that have parsed text
     @Query("SELECT c FROM Contract c WHERE c.user.id = :userId AND c.parsedText IS NOT NULL")
     List<Contract> findAllWithParsedTextByUserId(@Param("userId") Long userId);
+
+    // 6. new Filter contracts by counterpartySignatory name
+    @Query("SELECT c FROM Contract c WHERE c.user.id = :userId AND " +
+           "LOWER(c.counterpartySignatory) LIKE LOWER(CONCAT('%', :signatory, '%'))")
+    List<Contract> findByUserIdAndSignatoryContaining(
+            @Param("userId") Long userId,
+            @Param("signatory") String signatory
+    );
+
+    // 7. new Filter contracts by risk level
+    List<Contract> findByUserIdAndRiskLevelOrderByCreatedAtDesc(Long userId, RiskLevel riskLevel);
 }
